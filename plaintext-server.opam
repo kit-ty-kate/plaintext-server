@@ -1,0 +1,17 @@
+opam-version: "1.2"
+version: "0.1~"
+license: "MIT"
+maintainer: "Kate <kit.ty.kate@disroot.org>"
+authors: "Kate <kit.ty.kate@disroot.org>"
+homepage: "https://github.com/kit-ty-kate/text-server"
+dev-repo: "git://github.com/kit-ty-kate/text-server.git"
+bug-reports: "https://github.com/kit-ty-kate/text-server/issues"
+tags: ["server" "text" "log"]
+build: ["dune" "build" "-p" name "-j" jobs]
+depends: [
+  "dune" {build}
+  "containers"
+  "cohttp-lwt-unix"
+  "irmin-unix"
+]
+available: [ocaml-version >= "4.02.3"]
