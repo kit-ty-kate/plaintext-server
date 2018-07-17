@@ -2,7 +2,7 @@
  (name main)
  (public_name plaintext-server)
  (flags (:standard -safe-string -w A-44-33-4 -open Containers))
- (libraries containers cohttp-lwt-unix irmin-unix cmdliner))
+ (libraries containers cohttp-lwt-unix cmdliner))
 
 (rule
   (with-stdout-to config.ml

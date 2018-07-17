@@ -1,8 +1,5 @@
 open Lwt.Infix
 
-module Store = Irmin_unix.FS.KV(Irmin.Contents.String)
-module Sync = Irmin.Sync(Store)
-
 let callback store _conn req body =
   store >>= fun store ->
   let uri = Cohttp.Request.uri req in
@@ -16,11 +13,11 @@ let callback store _conn req body =
       end
   | false ->
       Cohttp_lwt.Body.to_string body >>= fun body ->
-      Store.set store uri ~info:(Irmin_unix.info "msg") body >>= fun () ->
+      Store.set store uri body >>= fun () ->
       Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body:"" ()
 
 let callback workdir =
-  let store = Store.Repo.v (Irmin_fs.config workdir) >>= Store.empty in
+  let store = Store.from workdir in
   callback store
 
 let main port workdir =

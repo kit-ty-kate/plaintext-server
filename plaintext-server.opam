@@ -12,7 +12,6 @@ depends: [
   "dune" {build}
   "containers"
   "cohttp-lwt-unix"
-  "irmin-unix"
   "cmdliner"
 ]
 available: [ocaml-version >= "4.02.3"]
