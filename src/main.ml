@@ -23,18 +23,20 @@ let callback workdir =
   let store = Store.Repo.v (Irmin_fs.config workdir) >>= Store.empty in
   callback store
 
-let main workdir =
+let main port workdir =
   let callback = callback workdir in
   Lwt_main.run begin
     Cohttp_lwt_unix.Server.create
       ~on_exn:(fun _ -> ())
-      ~mode:(`TCP (`Port 8080))
+      ~mode:(`TCP (`Port port))
       (Cohttp_lwt_unix.Server.make ~callback ())
   end
 
 let term =
+  let doc_port = "Local port number to serve and receive files." in
   let ($) = Cmdliner.Term.($) in
   Cmdliner.Term.pure main $
+  Cmdliner.Arg.(value & opt int 8080 & info ~doc:doc_port ["p"; "port"]) $
   Cmdliner.Arg.(required & pos 0 (some string) None & info ~docv:"WORKDIR" [])
 
 let info =
