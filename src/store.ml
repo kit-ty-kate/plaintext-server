@@ -7,8 +7,7 @@ type t = string
 
 module Path = struct
   let add_seg base x =
-    if String.is_empty x ||
-       String.equal x Filename.current_dir_name ||
+    if String.equal x Filename.current_dir_name ||
        String.equal x Filename.parent_dir_name ||
        String.mem ~sub:Filename.dir_sep x then
       failwith "Relative path are forbidden for obvious security reasons"
