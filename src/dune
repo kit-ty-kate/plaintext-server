@@ -8,4 +8,4 @@
   (with-stdout-to config.ml
     (progn
       (echo "let name = {|plaintext-server|}\n")
-      (echo "let version = {|${version:plaintext-server}|}\n"))))
+      (echo "let version = {|%{version:plaintext-server}|}\n"))))
