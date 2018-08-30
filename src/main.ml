@@ -1,6 +1,6 @@
 open Lwt.Infix
 
-let callback store _conn req body =
+let callback store ~password _conn req body =
   store >>= fun store ->
   let uri = Cohttp.Request.uri req in
   let uri = Uri.path uri in
@@ -13,12 +13,19 @@ let callback store _conn req body =
       end
   | false ->
       Cohttp_lwt.Body.to_string body >>= fun body ->
-      Store.set store uri body >>= fun () ->
-      Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body:"" ()
+      let store body =
+        Store.set store uri body >>= fun () ->
+        Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body:"" ()
+      in
+      begin match password, lazy (String.Split.left ~by:"\n" body) with
+      | None, _ -> store body
+      | Some password, lazy (Some (password', body)) when String.equal password password' -> store body
+      | Some _, _ -> Cohttp_lwt_unix.Server.respond_not_found ()
+      end
 
-let callback workdir =
-  let store = Store.from workdir in
-  callback store
+let callback ~datadir ~password =
+  let store = Store.from datadir in
+  callback store ~password
 
 let mkdir_p dir =
   let rec aux base = function
@@ -38,12 +45,12 @@ let mkdir_p dir =
   | ""::dirs -> aux Filename.dir_sep dirs
   | dirs -> aux Filename.current_dir_name dirs
 
-let main common_name port workdir =
+let main common_name port password workdir =
   let keysdir = Filename.concat workdir "keys" in
   let datadir = Filename.concat workdir "data" in
   let crt = Filename.concat keysdir "certificate.pem" in
   let key = Filename.concat keysdir "key.pem" in
-  let callback = callback datadir in
+  let callback = callback ~datadir ~password in
   Lwt_main.run begin
     mkdir_p keysdir >>= fun () ->
     mkdir_p datadir >>= fun () ->
@@ -60,11 +67,13 @@ let main common_name port workdir =
 
 let term =
   let doc_port = "Local port number to serve and receive files." in
-  let doc_cn = "Common name. Usually the server domain name" in
+  let doc_cn = "Common name. Usually the server domain name." in
+  let doc_password = "Password required to be able to store data." in
   let ($) = Cmdliner.Term.($) in
   Cmdliner.Term.pure main $
   Cmdliner.Arg.(required & opt (some string) None & info ~doc:doc_cn ["cn"]) $
   Cmdliner.Arg.(value & opt int 8080 & info ~doc:doc_port ["p"; "port"]) $
+  Cmdliner.Arg.(value & opt (some string) None & info ~doc:doc_password ["password"]) $
   Cmdliner.Arg.(required & pos 0 (some string) None & info ~docv:"WORKDIR" [])
 
 let info =
